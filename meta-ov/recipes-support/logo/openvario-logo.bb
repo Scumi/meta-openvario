@@ -13,10 +13,10 @@ DEPENDS = " \
 
 RSVG_CONVERT = "rsvg-convert"
 CONVERT = "convert.im7"
-BACKGROUND_COLOR = "rgb(255,255,255)"
-LOGO_FILE = "openvario-black.svg"
+BACKGROUND_COLOR = "rgb(0,0,0)"
+LOGO_FILE = "openvario-hz-white.svg"
 FONT = "${RECIPE_SYSROOT}/${datadir}/fonts/truetype/DejaVuSans.ttf"
-BOOT_TEXT = "Starting..."
+BOOT_TEXT = ""
 RECOVER_TEXT = "!!! Recovery !!!"
 
 SRC_URI = "\
