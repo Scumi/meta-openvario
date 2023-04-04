@@ -2,7 +2,7 @@
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 PR="r0"
-RCONFLICTS:${PN}="xcsoar-testing"
+RCONFLICTS:${PN}="xcsoar-testing xcsoar-scumi"
 
 SRC_URI = "git://github.com/XCSoar/XCSoar.git;protocol=https;branch=master \
 "

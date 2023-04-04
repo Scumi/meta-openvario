@@ -2,7 +2,7 @@
 # Released under the MIT license (see COPYING.MIT for the terms)
 
 PR = "r13"
-RCONFLICTS:${PN}="xcsoar"
+RCONFLICTS:${PN}="xcsoar xcsoar-scumi"
 
 SRCREV:pn-xcsoar-testing = "${AUTOREV}" 
 
