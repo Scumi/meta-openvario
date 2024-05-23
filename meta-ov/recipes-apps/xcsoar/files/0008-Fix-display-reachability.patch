@@ -1,0 +1,16 @@
+diff --git a/src/Geo/Flat/FlatGeoPoint.hpp b/src/Geo/Flat/FlatGeoPoint.hpp
+index 0e684e652d..c284e47666 100644
+--- a/src/Geo/Flat/FlatGeoPoint.hpp
++++ b/src/Geo/Flat/FlatGeoPoint.hpp
+@@ -69,7 +69,10 @@ struct FlatGeoPoint : IntPoint2D {
+     return ::DotProduct(*this, other);
+   }
+ 
+-  constexpr bool operator==(const FlatGeoPoint &) const noexcept = default;
++  constexpr
++  bool operator==(const FlatGeoPoint &other) const noexcept {
++    return IntPoint2D::operator==(other);
++  };
+   constexpr bool operator!=(const FlatGeoPoint &) const noexcept = default;
+ 
+   [[gnu::pure]]
