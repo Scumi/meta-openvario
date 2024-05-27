@@ -19,9 +19,16 @@ DEFAULT_PREFERENCE-sun7i="1"
 # DEFAULT_PREFERENCE-sun8i="1"
 # DEFAULT_PREFERENCE-sun50i="1"
 
+# use older version of u-boot to avoid re-writing 0001-video_bmp-implement-BMP-RLE-to-32-bit.patch
+SRCREV = "38e18d6392fca9f6809cb3079af3069efc3d181f"
+LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+
 # the nanopi-neo_air isn't used in openvario :), we need only the boot.cmd:
 SRC_URI:append = " file://boot.cmd "
 #            file://0001-nanopi_neo_air_defconfig-Enable-eMMC-support.patch
+
+# this patch does not apply and its also not needed on openvario
+SRC_URI:remove = " file://0004-mangopi-mq-r-t113-Fix-serial-console.patch "
 
 UBOOT_ENV_SUFFIX = "scr"
 UBOOT_ENV = "boot"
