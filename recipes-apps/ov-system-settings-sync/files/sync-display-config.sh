@@ -77,5 +77,4 @@ tmp=$(mktemp "${BOOT_CONFIG}.tmp.XXXXXX") || exit 1
 trap 'rm -f "$tmp"' 0 HUP INT TERM
 render_config > "$tmp" || exit 1
 
-printf '%s\n' 'Saving display settings...'
 mv "$tmp" "$BOOT_CONFIG"
