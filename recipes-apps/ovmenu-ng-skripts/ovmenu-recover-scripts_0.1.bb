@@ -15,6 +15,7 @@ inherit allarch
 RDEPENDS:${PN} = " \
 	bash \
 	dialog \
+	ov-system-tools \
 	rsync \
 "
 

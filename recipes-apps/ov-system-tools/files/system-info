@@ -39,6 +39,11 @@ for binary in /usr/bin/OpenSoar /usr/bin/xcsoar /opt/bin/sensord /opt/bin/variod
 	binary_package_version "$binary"
 done
 
+for package in xcsoar-menu 'xcsoar-maps-*'; do
+	opkg list-installed "$package" 2>/dev/null |
+		awk '$2 == "-" { printf "%s: %s\n", $1, $3 }'
+done
+
 for interface in eth0 wlan0; do
 	address=$(interface_address "$interface")
 	mac=$(interface_mac "$interface")
