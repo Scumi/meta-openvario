@@ -35,6 +35,7 @@ SRC_URI = "\
 	file://ovmenu-ng.sh \
 	file://ovmenu-ng-opensoar.sh \
 	file://ovmenu-ng-xcsoar.sh \
+	file://xcsoar-exclusive-handoff \
 	file://openvario.rc \
 	file://${BPN}.service \
 	file://disable_dropbear.preset \
@@ -51,6 +52,9 @@ do_install() {
 	install -m 0755 ${S}/ovmenu-ng.sh ${D}${bindir}/ovmenu-ng.sh
 	install -m 0755 ${S}/ovmenu-ng-opensoar.sh ${D}${bindir}/ovmenu-ng-opensoar.sh
 	install -m 0755 ${S}/ovmenu-ng-xcsoar.sh ${D}${bindir}/ovmenu-ng-xcsoar.sh
+	install -d ${D}${libexecdir}/openvario
+	install -m 0755 ${S}/xcsoar-exclusive-handoff \
+		${D}${libexecdir}/openvario/xcsoar-exclusive-handoff
 	install -d ${D}${ROOT_HOME}
 	install -d ${D}${ROOT_HOME}/.xcsoar
 	install -d ${D}${ROOT_HOME}/data  # mount dir for data partition!
@@ -70,6 +74,7 @@ FILES:${PN} = " \
 	${bindir}/ovmenu-ng.sh \
 	${bindir}/ovmenu-ng-opensoar.sh \
 	${bindir}/ovmenu-ng-xcsoar.sh \
+	${libexecdir}/openvario/xcsoar-exclusive-handoff \
 	${ROOT_HOME}/.dialogrc \
 	${systemd_unitdir}/system-preset/50-disable_dropbear.preset \
 	${ROOT_HOME}/.xcsoar/ \

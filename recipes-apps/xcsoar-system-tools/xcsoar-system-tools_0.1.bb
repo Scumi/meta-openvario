@@ -9,6 +9,8 @@ SRC_URI = " \
 	file://sensor-initialization.tool \
 	file://system-information \
 	file://system-information.tool \
+	file://touchscreen-calibration \
+	file://touchscreen-calibration.tool \
 "
 
 S = "${WORKDIR}"
@@ -19,7 +21,7 @@ RDEPENDS:${PN} = "ov-system-tools"
 
 do_install() {
 	install -d ${D}${libexecdir}/xcsoar/system-tools
-	for tool in sensor-calibration sensor-initialization system-information; do
+	for tool in sensor-calibration sensor-initialization system-information touchscreen-calibration; do
 		install -m 0755 ${WORKDIR}/$tool \
 			${D}${libexecdir}/xcsoar/system-tools/$tool
 		install -m 0644 ${WORKDIR}/$tool.tool \

@@ -54,7 +54,7 @@ function do_shell() {
     fi
 }
 
-function start_app() {
+function start_app_once() {
     case "$main_app" in
         "OpenSoar")
             /usr/bin/OpenSoar -fly -datapath=data/OpenSoarData
@@ -83,6 +83,24 @@ function start_app() {
     esac
     /usr/bin/sync-display-config.sh 2>/dev/null || true
     return "$rc"
+}
+
+function start_app() {
+    while true; do
+        start_app_once
+        local rc=$?
+
+        # Restart only after consuming an exclusive XCSoar request.
+        case "$main_app" in
+            "xcsoar"|"XCSoar")
+                if /usr/libexec/openvario/xcsoar-exclusive-handoff run \
+                    "$XCSOAR_EXCLUSIVE_HANDOFF_DIR"; then
+                    continue
+                fi
+                ;;
+        esac
+        return "$rc"
+    done
 }
 
 # Update variod only when the user changes the selected application.
