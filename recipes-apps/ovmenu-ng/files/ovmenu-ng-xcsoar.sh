@@ -230,9 +230,13 @@ function calibrate_sensors() {
 }
 
 function calibrate_touch() {
-	echo "Calibrating Touch ..." >> /tmp/tail.$$
-	/usr/bin/ov-calibrate-ts.sh >> /tmp/tail.$$
-	dialog --msgbox "Calibration OK!" 10 50
+	if /usr/bin/ov-calibrate-ts.sh > /tmp/tail.$$ 2>&1; then
+		dialog --msgbox "Touchscreen calibration was saved." 10 50
+	else
+		dialog --backtitle "OpenVario" \
+			--title "Touchscreen calibration failed" \
+			--textbox /tmp/tail.$$ 15 60
+	fi
 }
 
 function yesno_exit(){
