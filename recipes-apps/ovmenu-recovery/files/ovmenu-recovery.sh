@@ -328,23 +328,17 @@ function recover_system(){
          else
            mkdir -p $PARTITION3/OpenSoarData
          fi
-         if [ -d  $RECOVER_DIR/xcsoar ]; then
-           cp -vfr $RECOVER_DIR/xcsoar/* $PARTITION3/OpenSoarData/
-         else
-           cp -vfr $HOME_PART2/.xcsoar/* $PARTITION3/OpenSoarData/
-         fi
-
          # XCSoarData:
          if [ -d  $PARTITION3/XCSoarData ]; then
            rm -vfr $PARTITION3/XCSoarData/*  # delete complete content
          else
            mkdir -p $PARTITION3/XCSoarData
          fi
-         if [ -d  $RECOVER_DIR/xcsoar ]; then
-           cp -vfr $RECOVER_DIR/xcsoar/* $PARTITION3/XCSoarData/ 
-         else
-           cp -vfr $HOME_PART2/.xcsoar/* $PARTITION3/XCSoarData/
-         fi
+         # Backup dir exists even when the saved ~/.xcsoar was empty.
+         src=$RECOVER_DIR/xcsoar
+         [ -n "$(ls -A $src 2>/dev/null)" ] || src=$HOME_PART2/.xcsoar
+         cp -vfr $src/* $PARTITION3/OpenSoarData/
+         cp -vfr $src/* $PARTITION3/XCSoarData/
          
          # .glider_club:
          if [ -d $RECOVER_DIR/glider_club ]; then
@@ -361,10 +355,11 @@ function recover_system(){
          mount ${TARGET}p2 $PARTITION2  # after partition 3!
          if mount | grep ${TARGET}p3 > /dev/null; then
             #  if mount ${TARGET}p3 $PARTITION3; then
-            mkdir -p $PARTITION3/OpenSoarData
-            cp -rfv $RECOVER_DIR/xcsoar/* $PARTITION3/OpenSoarData/
-            mkdir -p $PARTITION3/XCSoarData
-            cp -rfv $RECOVER_DIR/xcsoar/* $PARTITION3/XCSoarData/
+            mkdir -p $PARTITION3/OpenSoarData $PARTITION3/XCSoarData
+            src=$RECOVER_DIR/xcsoar
+            [ -n "$(ls -A $src 2>/dev/null)" ] || src=$HOME_PART2/.xcsoar
+            cp -rfv $src/* $PARTITION3/OpenSoarData/
+            cp -rfv $src/* $PARTITION3/XCSoarData/
             mv -fv $RECOVER_DIR/xcsoar $RECOVER_DIR/_xcsoar
             if [ -d "$RECOVER_DIR/glider_club" ]; then
                mv -fv $RECOVER_DIR/glider_club $PARTITION3/.glider_club

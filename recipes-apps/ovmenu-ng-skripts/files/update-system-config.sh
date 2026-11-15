@@ -30,37 +30,41 @@ if [ -e "$HOME/recover_data/upgrade.cfg" ]; then
       esac
     done
     # ==================== Recover Data ======================
-    if [ "$UPGRADE_TYPE" == "2" ]; then 
-      if [ ! -d $DATADIR/OpenSoarData ]; then
-        # the data dir is new and has to be filled from USB, this stick should be still 
-        # available after upgrade
-        # This is only the case on an upgrade from old to a new system
-        mkdir -p $DATADIR/OpenSoarData
-        echo "'data/OpenSoarData'is new and has to be filled..."  >> $DEBUG_LOG
-      fi
-      if [ ! -d $DATADIR/XCSoarData ]; then
-        mkdir -p $DATADIR/OpenSoarData
-        echo "'data/XCSoarData'is new and has to be filled..."  >> $DEBUG_LOG
-      fi
-      file_count=$(find $HOME/.xcsoar -maxdepth 1 -type f | wc -l)
-      if (( $file_count > 6 )); then
+    if [ "$UPGRADE_TYPE" == "2" ]; then
+      if ! mountpoint -q "$DATADIR"; then
+        echo "data partition is not mounted; keeping ~/.xcsoar" >> $DEBUG_LOG
+      else
         /usr/bin/psplash-message "Restoring flight data..." 2>/dev/null || true
-        rsync -ruvtcE --progress $HOME/.xcsoar/* $DATADIR/OpenSoarData/ \
-                    --delete --exclude cache  --exclude logs
-        echo "rsync from .xcsoar to $DATADIR/OpenSoarData"  >> $DEBUG_LOG
-
-        rsync -ruvtcE --progress $HOME/.xcsoar/* $DATADIR/XCSoarData/ \
-                      --delete --exclude cache  --exclude logs
+        mkdir -p "$DATADIR/OpenSoarData" "$DATADIR/XCSoarData"
+        copy_ok=1
+        for f in "$HOME/.xcsoar"/*; do
+          [ -e "$f" ] || continue
+          base=${f##*/}
+          case "$base" in
+            *.prf) xdest="$DATADIR/XCSoarData/profiles" ;;
+            *.xci) xdest="$DATADIR/XCSoarData/input" ;;
+            *.xcm) xdest="$DATADIR/XCSoarData/maps" ;;
+            *) xdest="$DATADIR/XCSoarData" ;;
+          esac
+          mkdir -p "$xdest" || copy_ok=0
+          # Profiles, input and maps are read from those directories.
+          rsync -a --ignore-existing "$f" "$xdest/" || copy_ok=0
+          rsync -a --ignore-existing "$f" "$DATADIR/OpenSoarData/" || copy_ok=0
+        done
         sync
-        echo "rsync from .xcsoar to $DATADIR/XCSoarData"  >> $DEBUG_LOG
-      fi
-      rm -rvf $HOME/.xcsoar/*
-      if [ -d $HOME/.glider_club ]; then
-        /usr/bin/psplash-message "Restoring flight data..." 2>/dev/null || true
-        mkdir -p $DATADIR/.glider_club
-        rsync -ruvtcE --progress $HOME/.glider_club/* $DATADIR/.glider_club/
-        sync
-        rm -rvf $HOME/.glider_club
+        if [ "$copy_ok" = 1 ]; then
+          rm -rf "$HOME/.xcsoar"/*
+          echo "copied ~/.xcsoar into XCSoarData and OpenSoarData" >> $DEBUG_LOG
+        else
+          echo "copy of ~/.xcsoar failed; source kept" >> $DEBUG_LOG
+        fi
+        if [ -d "$HOME/.glider_club" ]; then
+          mkdir -p "$DATADIR/.glider_club"
+          if rsync -a --ignore-existing "$HOME/.glider_club/" "$DATADIR/.glider_club/"; then
+            rm -rf "$HOME/.glider_club"
+          fi
+          sync
+        fi
       fi
     fi
     # ==================== End ===============================
