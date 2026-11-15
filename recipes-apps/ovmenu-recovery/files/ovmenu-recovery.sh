@@ -292,6 +292,7 @@ function recover_system(){
     # 2 - from old fw to new fw
     # 3 - from new fw to old fw
     # 4 - from old fw to old fw
+    # 5 - erase the data partition and restore packaged defaults
   case "$UPGRADE_TYPE" in
   1)   echo "restore 3rd partition 'ov-data'"
        echo "------------------------------"
@@ -328,23 +329,17 @@ function recover_system(){
          else
            mkdir -p $PARTITION3/OpenSoarData
          fi
-         if [ -d  $RECOVER_DIR/xcsoar ]; then
-           cp -vfr $RECOVER_DIR/xcsoar/* $PARTITION3/OpenSoarData/
-         else
-           cp -vfr $HOME_PART2/.xcsoar/* $PARTITION3/OpenSoarData/
-         fi
-
          # XCSoarData:
          if [ -d  $PARTITION3/XCSoarData ]; then
            rm -vfr $PARTITION3/XCSoarData/*  # delete complete content
          else
            mkdir -p $PARTITION3/XCSoarData
          fi
-         if [ -d  $RECOVER_DIR/xcsoar ]; then
-           cp -vfr $RECOVER_DIR/xcsoar/* $PARTITION3/XCSoarData/ 
-         else
-           cp -vfr $HOME_PART2/.xcsoar/* $PARTITION3/XCSoarData/
-         fi
+         # Backup dir exists even when the saved ~/.xcsoar was empty.
+         src=$RECOVER_DIR/xcsoar
+         [ -n "$(ls -A $src 2>/dev/null)" ] || src=$HOME_PART2/.xcsoar
+         cp -vfr $src/* $PARTITION3/OpenSoarData/
+         cp -vfr $src/* $PARTITION3/XCSoarData/
          
          # .glider_club:
          if [ -d $RECOVER_DIR/glider_club ]; then
@@ -361,10 +356,11 @@ function recover_system(){
          mount ${TARGET}p2 $PARTITION2  # after partition 3!
          if mount | grep ${TARGET}p3 > /dev/null; then
             #  if mount ${TARGET}p3 $PARTITION3; then
-            mkdir -p $PARTITION3/OpenSoarData
-            cp -rfv $RECOVER_DIR/xcsoar/* $PARTITION3/OpenSoarData/
-            mkdir -p $PARTITION3/XCSoarData
-            cp -rfv $RECOVER_DIR/xcsoar/* $PARTITION3/XCSoarData/
+            mkdir -p $PARTITION3/OpenSoarData $PARTITION3/XCSoarData
+            src=$RECOVER_DIR/xcsoar
+            [ -n "$(ls -A $src 2>/dev/null)" ] || src=$HOME_PART2/.xcsoar
+            cp -rfv $src/* $PARTITION3/OpenSoarData/
+            cp -rfv $src/* $PARTITION3/XCSoarData/
             mv -fv $RECOVER_DIR/xcsoar $RECOVER_DIR/_xcsoar
             if [ -d "$RECOVER_DIR/glider_club" ]; then
                mv -fv $RECOVER_DIR/glider_club $PARTITION3/.glider_club
@@ -383,6 +379,40 @@ function recover_system(){
        fi
        sync
        debug_stop "old to new"
+       ;;
+  5) echo "erase data partition and restore defaults"
+       echo "---------------------------------------"
+       umount $PARTITION3 2>/dev/null || true
+       if [ ! -b ${TARGET}p3 ]; then
+         create_mmcblkp3
+         sync
+       fi
+       mkfs.ext4 -F ${TARGET}p3
+       sync
+       mkdir -p $PARTITION3
+       if ! mount ${TARGET}p3 $PARTITION3; then
+         echo "Error 5: mmcblk0p3 couldn't be mounted" >> $DEBUG_LOG
+         error_stop "Error 5: mmcblk0p3 couldn't be mounted!"
+       fi
+       mount ${TARGET}p2 $PARTITION2
+       mkdir -p $PARTITION3/OpenSoarData $PARTITION3/XCSoarData
+       # Same directories as copy_xcsoar_defaults(). A root copy would
+       # stay beside profiles/ and XCSoar would keep both.
+       for f in $HOME_PART2/.xcsoar/*; do
+         [ -e "$f" ] || continue
+         base=${f##*/}
+         case "$base" in
+           *.prf) xdest=$PARTITION3/XCSoarData/profiles ;;
+           *.xci) xdest=$PARTITION3/XCSoarData/input ;;
+           *.xcm) xdest=$PARTITION3/XCSoarData/maps ;;
+           *) xdest=$PARTITION3/XCSoarData ;;
+         esac
+         mkdir -p "$xdest"
+         cp -vfr "$f" "$xdest/"
+         cp -vfr "$f" $PARTITION3/OpenSoarData/
+       done
+       sync
+       debug_stop "data partition erased, defaults restored"
        ;;
   3 | 4)  echo "target is old type - data (copy) in .xcsoar"
        echo "------------------------------"
@@ -765,6 +795,9 @@ case "$UPGRADE_TYPE" in
     ;;
   2 | 4) 
     echo "On older systems no partition 3 available!"
+  ;;
+  5)
+    echo "data partition will be erased"
   ;;
   *) 
    error_stop "Wrong UPGRADE_TYPE = $UPGRADE_TYPE"

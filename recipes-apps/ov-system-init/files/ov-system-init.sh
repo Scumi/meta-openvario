@@ -49,18 +49,6 @@ fi
 
 cd "$HOME"
 
-# --- Post-upgrade config restore ---
-if [ -f "$RECOVER_DIR/upgrade.cfg" ]; then
-	/usr/bin/psplash-message "Restoring configuration..." 2>/dev/null || true
-	echo "Update system config"
-	export HOME DEBUG_LOG
-	DATADIR="$DATADIR" /usr/bin/update-system-config.sh
-elif [ ! -f "$RECOVER_DIR/_upgrade.cfg" ]; then
-	echo "upgrade.cfg not found"
-else
-	echo "only backup config found"
-fi
-
 storage_failed() {
 	/usr/bin/psplash-message "Data storage setup failed" 2>/dev/null || true
 	echo "$1" >&2
@@ -121,5 +109,18 @@ chmod 0755 "$DATADIR" || storage_failed "Cannot set data directory permissions"
 # Prepare application data directories after storage recovery.
 mkdir -p "$DATADIR/OpenSoarData" "$DATADIR/XCSoarData" ||
     storage_failed "Cannot initialize application data directories"
+
+# Restore after the data partition is mounted. Doing this earlier writes
+# into the root filesystem, and the mount then hides the copy.
+if [ -f "$RECOVER_DIR/upgrade.cfg" ]; then
+	/usr/bin/psplash-message "Restoring configuration..." 2>/dev/null || true
+	echo "Update system config"
+	export HOME DEBUG_LOG
+	DATADIR="$DATADIR" /usr/bin/update-system-config.sh
+elif [ ! -f "$RECOVER_DIR/_upgrade.cfg" ]; then
+	echo "upgrade.cfg not found"
+else
+	echo "only backup config found"
+fi
 
 exit 0
